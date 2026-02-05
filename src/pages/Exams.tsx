@@ -32,13 +32,32 @@ export const Exams = () => {
         selectedClass: '',
         selectedStudents: [] as string[]
     });
+    const [filters, setFilters] = useState({
+        className: '',
+        studentIds: [] as string[]
+    });
 
     const fetchData = async () => {
         try {
+            setLoading(true);
+            
+            // Build query parameters for filtering
+            const params = new URLSearchParams();
+            if (filters.className) {
+                params.append('className', filters.className);
+            }
+            if (filters.studentIds.length > 0) {
+                filters.studentIds.forEach(id => params.append('studentIds', id));
+            }
+            
+            const queryString = params.toString();
+            const examsUrl = queryString ? `/exams?${queryString}` : '/exams';
+            
             const [examsResponse, studentsResponse] = await Promise.all([
-                api.get('/exams'),
+                api.get(examsUrl),
                 api.get('/students')
             ]);
+            
             setExams(examsResponse.data);
             setStudents(studentsResponse.data);
         } catch (err) {
@@ -50,7 +69,9 @@ export const Exams = () => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [filters]);
+
+
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -328,6 +349,7 @@ export const Exams = () => {
                                         onChange={(selectedIds) => setNewExam(prev => ({ ...prev, selectedStudents: selectedIds }))}
                                         placeholder="Selecione os alunos..."
                                         required={newExam.assignmentType === 'students'}
+                                        className="h-12"
                                     />
                                 )}
                             </div>
@@ -469,8 +491,7 @@ export const Exams = () => {
                                         value={editExam.selectedStudents}
                                         onChange={(selectedIds) => setEditExam(prev => ({ ...prev, selectedStudents: selectedIds }))}
                                         placeholder="Selecione os alunos..."
-                                        required={editExam.assignmentType === 'students'}
-                                    />
+                                        required={editExam.assignmentType === 'students'}                                        className="h-12"                                    />
                                 )}
                             </div>
                         </div>
@@ -495,14 +516,63 @@ export const Exams = () => {
                 />
             </div>
 
+            <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Filtrar por Turma
+                    </label>
+                    <select
+                        value={filters.className}
+                        onChange={(e) => setFilters(prev => ({ ...prev, className: e.target.value, studentIds: [] }))}
+                        className="w-full px-3 py-2 h-12 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">Todas as turmas</option>
+                        {[...new Set(students.map(s => s.className).filter(Boolean))].map(className => (
+                            <option key={className} value={className}>{className}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="flex-1">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Filtrar por Alunos
+                    </label>
+                    <MultiSelect
+                        options={students.map(student => ({
+                            id: student.id,
+                            label: student.name,
+                            sublabel: `${student.registrationNumber || ''}${student.className ? ` • ${student.className}` : ''}`.trim()
+                        }))}
+                        value={filters.studentIds}
+                        onChange={(selectedIds) => setFilters(prev => ({ ...prev, studentIds: selectedIds, className: '' }))}
+                        placeholder="Selecione os alunos..."
+                        className="h-12"
+                    />
+                </div>
+                {(filters.className || filters.studentIds.length > 0) && (
+                    <div className="flex items-end">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setFilters({ className: '', studentIds: [] })}
+                            className="px-4 py-2"
+                        >
+                            Limpar Filtros
+                        </Button>
+                    </div>
+                )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
                     [1, 2, 3].map((i) => <div key={i} className="h-48 rounded-xl bg-slate-800/50 animate-pulse" />)
                 ) : exams.length === 0 ? (
                     <div className="col-span-full py-20 text-center">
                         <ClipboardList className="w-16 h-16 text-slate-700 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-slate-300">Nenhuma prova encontrada</h3>
-                        <p className="text-slate-500 mt-2">Crie sua primeira prova para começar a corrigir.</p>
+                        <h3 className="text-xl font-semibold text-slate-300">
+                            {filters.className || filters.studentIds.length > 0 ? 'Nenhuma prova encontrada com os filtros aplicados' : 'Nenhuma prova encontrada'}
+                        </h3>
+                        <p className="text-slate-500 mt-2">
+                            {filters.className || filters.studentIds.length > 0 ? 'Tente ajustar os filtros ou crie uma nova prova.' : 'Crie sua primeira prova para começar a corrigir.'}
+                        </p>
                     </div>
                 ) : (
                     exams.map((exam) => (

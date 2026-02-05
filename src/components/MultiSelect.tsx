@@ -13,9 +13,10 @@ interface MultiSelectProps {
     onChange: (value: string[]) => void;
     placeholder?: string;
     required?: boolean;
+    className?: string;
 }
 
-export const MultiSelect = ({ options, value, onChange, placeholder = "Selecione...", required = false }: MultiSelectProps) => {
+export const MultiSelect = ({ options, value, onChange, placeholder = "Selecione...", required = false, className = "" }: MultiSelectProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -67,31 +68,38 @@ export const MultiSelect = ({ options, value, onChange, placeholder = "Selecione
     return (
         <div className="relative" ref={containerRef}>
             <div
-                className={`w-full min-h-10.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${required && value.length === 0 ? 'border-red-500' : ''}`}
+                className={`w-full h-12 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className} ${required && value.length === 0 ? 'border-red-500' : ''}`}
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1 items-center pr-6">
                     {selectedOptions.length > 0 ? (
-                        selectedOptions.map(option => (
-                            <span
-                                key={option.id}
-                                className="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-sm rounded-md"
-                            >
-                                {option.label}
-                                <button
-                                    type="button"
-                                    onClick={(e) => handleRemove(option.id, e)}
-                                    className="hover:bg-blue-700 rounded-full p-0.5"
+                        <>
+                            {selectedOptions.slice(0, 2).map(option => (
+                                <span
+                                    key={option.id}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-sm rounded-md"
                                 >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            </span>
-                        ))
+                                    {option.label}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => handleRemove(option.id, e)}
+                                        className="hover:bg-blue-700 rounded-full p-0.5"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </span>
+                            ))}
+                            {selectedOptions.length > 2 && (
+                                <span className="text-slate-400 text-sm px-2 py-1">
+                                    +{selectedOptions.length - 2} mais
+                                </span>
+                            )}
+                        </>
                     ) : (
                         <span className="text-slate-500">{placeholder}</span>
                     )}
                 </div>
-                <div className="flex justify-end mt-1">
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </div>
             </div>
