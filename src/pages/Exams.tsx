@@ -47,25 +47,25 @@ export const Exams = () => {
         <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Exames</h1>
-                    <p className="text-slate-400">Gerencie seus exames, gabaritos e correções.</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">Provas</h1>
+                    <p className="text-slate-400">Gerencie suas provas, gabaritos e correções.</p>
                 </div>
                 <Button onClick={() => setIsCreating(true)} className="gap-2">
                     <Plus className="w-5 h-5" />
-                    Novo Exame
+                    Nova Prova
                 </Button>
             </div>
 
             {isCreating && (
                 <Card className="border-blue-500/30 bg-blue-600/5 animate-in fade-in zoom-in-95 duration-200">
                     <CardHeader>
-                        <CardTitle>Configurar Novo Exame</CardTitle>
-                        <CardDescription>Defina as informações básicas do seu exame.</CardDescription>
+                        <CardTitle>Configurar Nova Prova</CardTitle>
+                        <CardDescription>Defina as informações básicas da sua prova.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <Input
-                                label="Nome do Exame"
+                                label="Nome da Prova"
                                 placeholder="Ex: Prova Mensal de Matemática"
                                 value={newExam.name}
                                 onChange={(e) => setNewExam({ ...newExam, name: e.target.value })}
@@ -97,7 +97,7 @@ export const Exams = () => {
             <div className="flex items-center gap-4 bg-slate-900/50 p-2 rounded-xl border border-slate-800">
                 <div className="p-2 text-slate-500"><Search className="w-5 h-5" /></div>
                 <input
-                    placeholder="Pesquisar exames..."
+                    placeholder="Pesquisar provas..."
                     className="bg-transparent border-none focus:ring-0 text-slate-100 placeholder:text-slate-500 flex-1 px-2"
                 />
             </div>
@@ -108,8 +108,8 @@ export const Exams = () => {
                 ) : exams.length === 0 ? (
                     <div className="col-span-full py-20 text-center">
                         <ClipboardList className="w-16 h-16 text-slate-700 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-slate-300">Nenhum exame encontrado</h3>
-                        <p className="text-slate-500 mt-2">Crie seu primeiro exame para começar a corrigir.</p>
+                        <h3 className="text-xl font-semibold text-slate-300">Nenhuma prova encontrada</h3>
+                        <p className="text-slate-500 mt-2">Crie sua primeira prova para começar a corrigir.</p>
                     </div>
                 ) : (
                     exams.map((exam) => (
@@ -138,7 +138,7 @@ export const Exams = () => {
                                 <div className="pt-2">
                                     <Link to={`/exams/${exam.id}`}>
                                         <Button variant="outline" className="w-full justify-between group/btn" as="div">
-                                            Gerenciar Exame
+                                            Gerenciar Prova
                                             <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                                         </Button>
                                     </Link>

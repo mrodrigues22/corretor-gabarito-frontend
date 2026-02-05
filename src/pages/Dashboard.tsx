@@ -31,7 +31,7 @@ export const Dashboard = () => {
     }, []);
 
     const statCards = [
-        { name: 'Exames Criados', value: stats.exams, icon: ClipboardList, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+        { name: 'Provas Criadas', value: stats.exams, icon: ClipboardList, color: 'text-blue-400', bg: 'bg-blue-400/10' },
         { name: 'Total de Alunos', value: stats.students, icon: GraduationCap, color: 'text-purple-400', bg: 'bg-purple-400/10' },
         { name: 'Folhas Processadas', value: stats.processed, icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-400/10' },
         { name: 'Aguardando', value: stats.pending, icon: Clock, color: 'text-orange-400', bg: 'bg-orange-400/10' },
@@ -71,7 +71,7 @@ export const Dashboard = () => {
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <button className="flex flex-col items-center gap-3 p-6 rounded-xl bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 transition-all group text-left w-full">
                             <ClipboardList className="w-8 h-8 text-blue-400 group-hover:scale-110 transition-transform" />
-                            <span className="font-semibold text-white">Novo Exame</span>
+                            <span className="font-semibold text-white">Nova Prova</span>
                         </button>
                         <button className="flex flex-col items-center gap-3 p-6 rounded-xl bg-purple-600/10 border border-purple-500/20 hover:bg-purple-600/20 transition-all group text-left w-full">
                             <GraduationCap className="w-8 h-8 text-purple-400 group-hover:scale-110 transition-transform" />

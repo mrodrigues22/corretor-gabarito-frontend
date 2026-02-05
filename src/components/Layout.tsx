@@ -15,7 +15,7 @@ export const Layout = () => {
 
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-        { name: 'Exames', path: '/exams', icon: ClipboardList },
+        { name: 'Provas', path: '/exams', icon: ClipboardList },
         { name: 'Alunos', path: '/students', icon: GraduationCap },
     ];
 

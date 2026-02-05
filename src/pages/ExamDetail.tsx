@@ -104,7 +104,7 @@ export const ExamDetail = () => {
         </div>
     );
 
-    if (!exam) return <div>Exame não encontrado.</div>;
+    if (!exam) return <div>Prova não encontrada.</div>;
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
