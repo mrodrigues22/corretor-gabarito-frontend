@@ -22,6 +22,7 @@ export const ExamDetail = () => {
 
     const [isSavingKey, setIsSavingKey] = useState(false);
     const [uploadFiles, setUploadFiles] = useState<FileList | null>(null);
+    const [isGeneratingSheets, setIsGeneratingSheets] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
     const fetchData = async () => {
@@ -90,11 +91,35 @@ export const ExamDetail = () => {
     };
 
     const handleGenerateSheets = async () => {
+        setIsGeneratingSheets(true);
         try {
             await api.post(`/exams/${id}/registrations/generate`);
-            alert('Registros gerados com sucesso! (Download de PDF em breve)');
+
+            // Wait a bit for generation to complete
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Check if there are registrations
+            const registrationsResponse = await api.get(`/exams/${id}/registrations`);
+            if (registrationsResponse.data.length === 0) {
+                alert('Não há alunos registrados para esta prova. Certifique-se de que há alunos cadastrados na escola.');
+                return;
+            }
+
+            const response = await api.get(`/exams/${id}/registrations/sheets.pdf`, {
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `gabaritos-${exam?.name || 'prova'}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
         } catch (err) {
             console.error(err);
+        } finally {
+            setIsGeneratingSheets(false);
         }
     };
 
@@ -121,7 +146,7 @@ export const ExamDetail = () => {
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="outline" className="gap-2" onClick={handleGenerateSheets}>
+                    <Button variant="outline" className="gap-2" onClick={handleGenerateSheets} isLoading={isGeneratingSheets}>
                         <Download className="w-5 h-5" />
                         Baixar Folhas
                     </Button>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/client';
 import { Button } from '../components/Button';
-import { Card, CardContent } from '../components/Card';
+import { Card } from '../components/Card';
 import { GraduationCap, Upload, Download, Search, UserMinus, UserCheck } from 'lucide-react';
 import type { Student } from '../types';
 import { cn } from '../utils';
@@ -28,11 +28,11 @@ export const Students = () => {
 
     const handleDownloadTemplate = async () => {
         try {
-            const response = await api.get('/students/template.csv', { responseType: 'blob' });
+            const response = await api.get('/students/template.xlsx', { responseType: 'blob' });
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', 'template_alunos.csv');
+            link.setAttribute('download', 'template_alunos.xlsx');
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -79,7 +79,7 @@ export const Students = () => {
                             id="student-upload"
                             className="hidden"
                             onChange={handleFileUpload}
-                            accept=".csv,.xlsx"
+                            accept=".xlsx"
                         />
                         <Button as="label" htmlFor="student-upload" className="gap-2 cursor-pointer" isLoading={isUploading}>
                             <Upload className="w-5 h-5" />

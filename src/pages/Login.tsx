@@ -62,6 +62,7 @@ export const Login = () => {
                                 type="password"
                                 placeholder="••••••••"
                                 error={errors.Password?.message as string}
+                                autoComplete="current-password"
                                 {...register('Password', { required: 'Senha é obrigatória' })}
                             />
 
