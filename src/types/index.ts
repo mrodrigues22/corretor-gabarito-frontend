@@ -30,6 +30,23 @@ export interface Student {
     className?: string;
 }
 
+export interface CreateStudentRequest {
+    registrationNumber: string;
+    name: string;
+    className?: string;
+}
+
+export interface UpdateStudentRequest {
+    registrationNumber: string;
+    name: string;
+    className?: string;
+}
+
+export interface UpdateStudentsClassRequest {
+    studentIds: string[];
+    className?: string;
+}
+
 export interface ExamRegistration {
     id: string;
     studentId: string;
