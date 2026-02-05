@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../api/client';
 import { Button } from '../components/Button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/Card';
-import { Input } from '../components/Input';
+import { Modal } from '../components/Modal';
 import type { Exam } from '../types';
 import { ClipboardList, Plus, Search, ChevronRight, Settings2 } from 'lucide-react';
 import { formatDate } from '../utils';
@@ -57,41 +57,61 @@ export const Exams = () => {
             </div>
 
             {isCreating && (
-                <Card className="border-blue-500/30 bg-blue-600/5 animate-in fade-in zoom-in-95 duration-200">
-                    <CardHeader>
-                        <CardTitle>Configurar Nova Prova</CardTitle>
-                        <CardDescription>Defina as informações básicas da sua prova.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <Input
-                                label="Nome da Prova"
+                <Modal
+                    isOpen={isCreating}
+                    onClose={() => setIsCreating(false)}
+                    title="Configurar Nova Prova"
+                >
+                    <form onSubmit={handleCreate} className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                                Nome da Prova
+                            </label>
+                            <input
+                                type="text"
                                 placeholder="Ex: Prova Mensal de Matemática"
                                 value={newExam.name}
                                 onChange={(e) => setNewExam({ ...newExam, name: e.target.value })}
+                                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 required
                             />
-                            <Input
-                                label="Total de Questões"
-                                type="number"
-                                value={newExam.totalQuestions}
-                                onChange={(e) => setNewExam({ ...newExam, totalQuestions: parseInt(e.target.value) })}
-                                required
-                            />
-                            <div className="flex items-end gap-3">
-                                <Input
-                                    label="Alternativas"
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Total de Questões
+                                </label>
+                                <input
+                                    type="number"
+                                    value={newExam.totalQuestions}
+                                    onChange={(e) => setNewExam({ ...newExam, totalQuestions: parseInt(e.target.value) })}
+                                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Alternativas
+                                </label>
+                                <input
                                     type="number"
                                     value={newExam.alternativesCount}
                                     onChange={(e) => setNewExam({ ...newExam, alternativesCount: parseInt(e.target.value) })}
+                                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required
                                 />
-                                <Button type="submit" className="flex-1">Criar</Button>
-                                <Button variant="ghost" onClick={() => setIsCreating(false)}>Cancelar</Button>
                             </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                        </div>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>
+                                Cancelar
+                            </Button>
+                            <Button type="submit">
+                                Criar Prova
+                            </Button>
+                        </div>
+                    </form>
+                </Modal>
             )}
 
             <div className="flex items-center gap-4 bg-slate-900/50 p-2 rounded-xl border border-slate-800">
