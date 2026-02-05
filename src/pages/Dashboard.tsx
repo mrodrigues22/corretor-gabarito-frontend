@@ -46,7 +46,7 @@ export const Dashboard = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statCards.map((stat) => (
-                    <Card key={stat.name} className="border-slate-800 transition-all hover:border-slate-700 hover:translate-y-[-2px]">
+                    <Card key={stat.name} className="border-slate-800 transition-all hover:border-slate-700 hover:-translate-y-0.5">
                         <CardContent className="pt-6">
                             <div className="flex items-center justify-between">
                                 <div>

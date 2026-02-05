@@ -93,16 +93,23 @@ export const ExamDetail = () => {
     const handleGenerateSheets = async () => {
         setIsGeneratingSheets(true);
         try {
-            await api.post(`/exams/${id}/registrations/generate`);
-
-            // Wait a bit for generation to complete
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // Check if there are registrations
+            // Check if there are already registrations
             const registrationsResponse = await api.get(`/exams/${id}/registrations`);
-            if (registrationsResponse.data.length === 0) {
-                alert('Não há alunos registrados para esta prova. Certifique-se de que há alunos cadastrados na escola.');
-                return;
+            const hasRegistrations = registrationsResponse.data.length > 0;
+
+            if (!hasRegistrations) {
+                // Generate registrations for all students if none exist
+                await api.post(`/exams/${id}/registrations/generate`);
+                
+                // Wait a bit for generation to complete
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Check again
+                const updatedRegistrations = await api.get(`/exams/${id}/registrations`);
+                if (updatedRegistrations.data.length === 0) {
+                    alert('Não há alunos registrados para esta prova. Certifique-se de que há alunos cadastrados na escola.');
+                    return;
+                }
             }
 
             const response = await api.get(`/exams/${id}/registrations/sheets.pdf`, {

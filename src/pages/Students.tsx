@@ -3,7 +3,7 @@ import api from '../api/client';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
-import { GraduationCap, Upload, Download, Search, UserMinus, UserCheck, Plus, Edit, Trash2, X, CheckSquare, Square, Users, Edit3 } from 'lucide-react';
+import { GraduationCap, Upload, Download, Search, Plus, Edit, Trash2, X, CheckSquare, Square, Edit3 } from 'lucide-react';
 import type { Student, CreateStudentRequest, UpdateStudentRequest, UpdateStudentsClassRequest } from '../types';
 import { cn } from '../utils';
 

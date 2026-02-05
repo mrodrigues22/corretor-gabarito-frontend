@@ -27,7 +27,7 @@ export const Layout = () => {
                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                         <RotateCcw className="text-white w-5 h-5" />
                     </div>
-                    <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                    <span className="text-xl font-bold bg-linear-to-r from-white to-slate-400 bg-clip-text text-transparent">
                         Gabarito.io
                     </span>
                 </div>

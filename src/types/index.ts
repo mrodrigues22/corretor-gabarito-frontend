@@ -18,6 +18,23 @@ export interface Exam {
     createdAt: string;
 }
 
+export interface CreateExamRequest {
+    name: string;
+    totalQuestions: number;
+    alternativesCount: number;
+    templateVersion: string;
+    className?: string;
+    studentIds?: string[];
+}
+
+export interface UpdateExamRequest {
+    name?: string;
+    totalQuestions?: number;
+    alternativesCount?: number;
+    className?: string;
+    studentIds?: string[];
+}
+
 export interface AnswerKeyEntry {
     questionNumber: number;
     correctOption: string;

@@ -3,21 +3,44 @@ import api from '../api/client';
 import { Button } from '../components/Button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/Card';
 import { Modal } from '../components/Modal';
-import type { Exam } from '../types';
-import { ClipboardList, Plus, Search, ChevronRight, Settings2 } from 'lucide-react';
+import { MultiSelect } from '../components/MultiSelect';
+import type { Exam, Student, CreateExamRequest, UpdateExamRequest } from '../types';
+import { ClipboardList, Plus, Search, ChevronRight, Settings2, Users, UserCheck, Edit } from 'lucide-react';
 import { formatDate } from '../utils';
 import { Link } from 'react-router-dom';
 
 export const Exams = () => {
     const [exams, setExams] = useState<Exam[]>([]);
+    const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
-    const [newExam, setNewExam] = useState({ name: '', totalQuestions: 40, alternativesCount: 5 });
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingExam, setEditingExam] = useState<Exam | null>(null);
+    const [newExam, setNewExam] = useState({
+        name: '',
+        totalQuestions: 40,
+        alternativesCount: 5,
+        assignmentType: 'all' as 'all' | 'class' | 'students',
+        selectedClass: '',
+        selectedStudents: [] as string[]
+    });
+    const [editExam, setEditExam] = useState({
+        name: '',
+        totalQuestions: 40,
+        alternativesCount: 5,
+        assignmentType: 'all' as 'all' | 'class' | 'students',
+        selectedClass: '',
+        selectedStudents: [] as string[]
+    });
 
-    const fetchExams = async () => {
+    const fetchData = async () => {
         try {
-            const response = await api.get('/exams');
-            setExams(response.data);
+            const [examsResponse, studentsResponse] = await Promise.all([
+                api.get('/exams'),
+                api.get('/students')
+            ]);
+            setExams(examsResponse.data);
+            setStudents(studentsResponse.data);
         } catch (err) {
             console.error(err);
         } finally {
@@ -26,21 +49,145 @@ export const Exams = () => {
     };
 
     useEffect(() => {
-        fetchExams();
+        fetchData();
     }, []);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const request: CreateExamRequest = {
+            name: newExam.name,
+            totalQuestions: newExam.totalQuestions,
+            alternativesCount: newExam.alternativesCount,
+            templateVersion: 'v1'
+        };
+
+        if (newExam.assignmentType === 'class' && newExam.selectedClass) {
+            request.className = newExam.selectedClass;
+        } else if (newExam.assignmentType === 'students' && newExam.selectedStudents.length > 0) {
+            request.studentIds = newExam.selectedStudents;
+        }
+
         try {
-            await api.post('/exams', {
-                ...newExam,
-                templateVersion: 'v1'
-            });
+            await api.post('/exams', request);
             setIsCreating(false);
-            fetchExams();
+            fetchData();
+            // Reset form
+            setNewExam({
+                name: '',
+                totalQuestions: 40,
+                alternativesCount: 5,
+                assignmentType: 'all',
+                selectedClass: '',
+                selectedStudents: []
+            });
         } catch (err) {
             console.error(err);
         }
+    };
+
+    const handleEdit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingExam) return;
+
+        const request: UpdateExamRequest = {
+            name: editExam.name,
+            totalQuestions: editExam.totalQuestions,
+            alternativesCount: editExam.alternativesCount
+        };
+
+        if (editExam.assignmentType === 'class' && editExam.selectedClass) {
+            request.className = editExam.selectedClass;
+        } else if (editExam.assignmentType === 'students' && editExam.selectedStudents.length > 0) {
+            request.studentIds = editExam.selectedStudents;
+        }
+
+        try {
+            await api.put(`/exams/${editingExam.id}`, request);
+            setIsEditing(false);
+            setEditingExam(null);
+            fetchData();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const openEditModal = async (exam: Exam) => {
+        setEditingExam(exam);
+        
+        // Fetch current registrations to determine assignment type
+        try {
+            const registrationsResponse = await api.get(`/exams/${exam.id}/registrations`);
+            const registrations = registrationsResponse.data;
+            
+            if (registrations.length === 0) {
+                // No registrations - default to all
+                setEditExam({
+                    name: exam.name,
+                    totalQuestions: exam.totalQuestions,
+                    alternativesCount: exam.alternativesCount,
+                    assignmentType: 'all',
+                    selectedClass: '',
+                    selectedStudents: []
+                });
+            } else {
+                // Check if all students are registered
+                const allStudentsResponse = await api.get('/students');
+                const allStudents = allStudentsResponse.data;
+                
+                if (registrations.length === allStudents.length) {
+                    // All students registered
+                    setEditExam({
+                        name: exam.name,
+                        totalQuestions: exam.totalQuestions,
+                        alternativesCount: exam.alternativesCount,
+                        assignmentType: 'all',
+                        selectedClass: '',
+                        selectedStudents: []
+                    });
+                } else {
+                    // Check if it's a class assignment
+                    const registeredStudentIds = registrations.map((r: any) => r.studentId);
+                    const registeredStudents = allStudents.filter((s: Student) => registeredStudentIds.includes(s.id));
+                    const classes = [...new Set(registeredStudents.map((s: Student) => s.className).filter(Boolean))] as string[];
+                    
+                    if (classes.length === 1 && registeredStudents.every((s: Student) => s.className === classes[0])) {
+                        // All registered students are from the same class
+                        setEditExam({
+                            name: exam.name,
+                            totalQuestions: exam.totalQuestions,
+                            alternativesCount: exam.alternativesCount,
+                            assignmentType: 'class',
+                            selectedClass: classes[0],
+                            selectedStudents: []
+                        });
+                    } else {
+                        // Specific students
+                        setEditExam({
+                            name: exam.name,
+                            totalQuestions: exam.totalQuestions,
+                            alternativesCount: exam.alternativesCount,
+                            assignmentType: 'students',
+                            selectedClass: '',
+                            selectedStudents: registeredStudentIds
+                        });
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching registrations:', err);
+            // Fallback to basic info
+            setEditExam({
+                name: exam.name,
+                totalQuestions: exam.totalQuestions,
+                alternativesCount: exam.alternativesCount,
+                assignmentType: 'all',
+                selectedClass: '',
+                selectedStudents: []
+            });
+        }
+        
+        setIsEditing(true);
     };
 
     return (
@@ -102,12 +249,238 @@ export const Exams = () => {
                                 />
                             </div>
                         </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-3">
+                                Atribuir para
+                            </label>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        id="all"
+                                        name="assignmentType"
+                                        value="all"
+                                        checked={newExam.assignmentType === 'all'}
+                                        onChange={(e) => setNewExam({ ...newExam, assignmentType: e.target.value as 'all' | 'class' | 'students', selectedClass: '', selectedStudents: [] })}
+                                        className="text-blue-500 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="all" className="text-slate-300 flex items-center gap-2">
+                                        <Users className="w-4 h-4" />
+                                        Todos os alunos
+                                    </label>
+                                </div>
+                                
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        id="class"
+                                        name="assignmentType"
+                                        value="class"
+                                        checked={newExam.assignmentType === 'class'}
+                                        onChange={(e) => setNewExam({ ...newExam, assignmentType: e.target.value as 'all' | 'class' | 'students', selectedStudents: [] })}
+                                        className="text-blue-500 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="class" className="text-slate-300 flex items-center gap-2">
+                                        <UserCheck className="w-4 h-4" />
+                                        Turma específica
+                                    </label>
+                                </div>
+                                
+                                {newExam.assignmentType === 'class' && (
+                                    <select
+                                        value={newExam.selectedClass}
+                                        onChange={(e) => setNewExam({ ...newExam, selectedClass: e.target.value })}
+                                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required={newExam.assignmentType === 'class'}
+                                    >
+                                        <option value="">Selecione uma turma</option>
+                                        {[...new Set(students.map(s => s.className).filter(Boolean))].map(className => (
+                                            <option key={className} value={className}>{className}</option>
+                                        ))}
+                                    </select>
+                                )}
+                                
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        id="students"
+                                        name="assignmentType"
+                                        value="students"
+                                        checked={newExam.assignmentType === 'students'}
+                                        onChange={(e) => setNewExam({ ...newExam, assignmentType: e.target.value as 'all' | 'class' | 'students', selectedClass: '' })}
+                                        className="text-blue-500 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="students" className="text-slate-300 flex items-center gap-2">
+                                        <UserCheck className="w-4 h-4" />
+                                        Alunos específicos
+                                    </label>
+                                </div>
+                                
+                                {newExam.assignmentType === 'students' && (
+                                    <MultiSelect
+                                        options={students.map(student => ({
+                                            id: student.id,
+                                            label: student.name,
+                                            sublabel: `${student.registrationNumber || ''}${student.className ? ` • ${student.className}` : ''}`.trim()
+                                        }))}
+                                        value={newExam.selectedStudents}
+                                        onChange={(selectedIds) => setNewExam(prev => ({ ...prev, selectedStudents: selectedIds }))}
+                                        placeholder="Selecione os alunos..."
+                                        required={newExam.assignmentType === 'students'}
+                                    />
+                                )}
+                            </div>
+                        </div>
+
                         <div className="flex justify-end gap-3 pt-4">
                             <Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>
                                 Cancelar
                             </Button>
                             <Button type="submit">
                                 Criar Prova
+                            </Button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {isEditing && editingExam && (
+                <Modal
+                    isOpen={isEditing}
+                    onClose={() => setIsEditing(false)}
+                    title="Editar Prova"
+                >
+                    <form onSubmit={handleEdit} className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                                Nome da Prova
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Ex: Prova Mensal de Matemática"
+                                value={editExam.name}
+                                onChange={(e) => setEditExam({ ...editExam, name: e.target.value })}
+                                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                required
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Total de Questões
+                                </label>
+                                <input
+                                    type="number"
+                                    value={editExam.totalQuestions}
+                                    onChange={(e) => setEditExam({ ...editExam, totalQuestions: parseInt(e.target.value) })}
+                                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Alternativas
+                                </label>
+                                <input
+                                    type="number"
+                                    value={editExam.alternativesCount}
+                                    onChange={(e) => setEditExam({ ...editExam, alternativesCount: parseInt(e.target.value) })}
+                                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-3">
+                                Atribuir para
+                            </label>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        id="edit-all"
+                                        name="edit-assignmentType"
+                                        value="all"
+                                        checked={editExam.assignmentType === 'all'}
+                                        onChange={(e) => setEditExam({ ...editExam, assignmentType: e.target.value as 'all' | 'class' | 'students', selectedClass: '', selectedStudents: [] })}
+                                        className="text-blue-500 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="edit-all" className="text-slate-300 flex items-center gap-2">
+                                        <Users className="w-4 h-4" />
+                                        Todos os alunos
+                                    </label>
+                                </div>
+                                
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        id="edit-class"
+                                        name="edit-assignmentType"
+                                        value="class"
+                                        checked={editExam.assignmentType === 'class'}
+                                        onChange={(e) => setEditExam({ ...editExam, assignmentType: e.target.value as 'all' | 'class' | 'students', selectedStudents: [] })}
+                                        className="text-blue-500 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="edit-class" className="text-slate-300 flex items-center gap-2">
+                                        <UserCheck className="w-4 h-4" />
+                                        Turma específica
+                                    </label>
+                                </div>
+                                
+                                {editExam.assignmentType === 'class' && (
+                                    <select
+                                        value={editExam.selectedClass}
+                                        onChange={(e) => setEditExam({ ...editExam, selectedClass: e.target.value })}
+                                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required={editExam.assignmentType === 'class'}
+                                    >
+                                        <option value="">Selecione uma turma</option>
+                                        {[...new Set(students.map(s => s.className).filter(Boolean))].map(className => (
+                                            <option key={className} value={className}>{className}</option>
+                                        ))}
+                                    </select>
+                                )}
+                                
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        id="edit-students"
+                                        name="edit-assignmentType"
+                                        value="students"
+                                        checked={editExam.assignmentType === 'students'}
+                                        onChange={(e) => setEditExam({ ...editExam, assignmentType: e.target.value as 'all' | 'class' | 'students', selectedClass: '' })}
+                                        className="text-blue-500 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="edit-students" className="text-slate-300 flex items-center gap-2">
+                                        <UserCheck className="w-4 h-4" />
+                                        Alunos específicos
+                                    </label>
+                                </div>
+                                
+                                {editExam.assignmentType === 'students' && (
+                                    <MultiSelect
+                                        options={students.map(student => ({
+                                            id: student.id,
+                                            label: student.name,
+                                            sublabel: `${student.registrationNumber || ''}${student.className ? ` • ${student.className}` : ''}`.trim()
+                                        }))}
+                                        value={editExam.selectedStudents}
+                                        onChange={(selectedIds) => setEditExam(prev => ({ ...prev, selectedStudents: selectedIds }))}
+                                        placeholder="Selecione os alunos..."
+                                        required={editExam.assignmentType === 'students'}
+                                    />
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>
+                                Cancelar
+                            </Button>
+                            <Button type="submit">
+                                Salvar Alterações
                             </Button>
                         </div>
                     </form>
@@ -139,8 +512,20 @@ export const Exams = () => {
                                     <CardTitle className="text-xl group-hover:text-blue-400 transition-colors">{exam.name}</CardTitle>
                                     <CardDescription>Criado em {formatDate(exam.createdAt)}</CardDescription>
                                 </div>
-                                <div className="p-2 rounded-lg bg-slate-800 group-hover:bg-blue-600/20 text-slate-400 group-hover:text-blue-400 transition-all">
-                                    <Settings2 className="w-5 h-5" />
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            openEditModal(exam);
+                                        }}
+                                        className="p-2 rounded-lg bg-slate-800 hover:bg-blue-600/20 text-slate-400 hover:text-blue-400 transition-all"
+                                        title="Editar prova"
+                                    >
+                                        <Edit className="w-5 h-5" />
+                                    </button>
+                                    <div className="p-2 rounded-lg bg-slate-800 group-hover:bg-blue-600/20 text-slate-400 group-hover:text-blue-400 transition-all">
+                                        <Settings2 className="w-5 h-5" />
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
