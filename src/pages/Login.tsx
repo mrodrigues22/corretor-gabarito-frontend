@@ -19,7 +19,7 @@ export const Login = () => {
         try {
             const response = await api.post('/auth/login', data);
             localStorage.setItem('token', response.data.accessToken);
-            navigate('/');
+            navigate('/dashboard');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Erro ao entrar. Verifique suas credenciais.');
         } finally {

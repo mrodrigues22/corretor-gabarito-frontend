@@ -6,19 +6,21 @@ import { Dashboard } from './pages/Dashboard';
 import { Exams } from './pages/Exams';
 import { Students } from './pages/Students';
 import { ExamDetail } from './pages/ExamDetail';
+import { LandingPage } from './pages/LandingPage';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="exams" element={<Exams />} />
-            <Route path="exams/:id" element={<ExamDetail />} />
-            <Route path="students" element={<Students />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/exams" element={<Exams />} />
+            <Route path="/exams/:id" element={<ExamDetail />} />
+            <Route path="/students" element={<Students />} />
           </Route>
         </Route>
 
