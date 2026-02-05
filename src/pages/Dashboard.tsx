@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/Card';
 import { ClipboardList, GraduationCap, Upload, CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '../utils';
 
 export const Dashboard = () => {
+    const navigate = useNavigate();
     const [stats, setStats] = useState({ exams: 0, students: 0, processed: 0, pending: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -69,15 +71,15 @@ export const Dashboard = () => {
                         <CardDescription>Principais funcionalidades para começar o trabalho.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <button className="flex flex-col items-center gap-3 p-6 rounded-xl bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 transition-all group text-left w-full">
+                        <button onClick={() => navigate('/exams')} className="flex flex-col items-center gap-3 p-6 rounded-xl bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 transition-all group text-left w-full">
                             <ClipboardList className="w-8 h-8 text-blue-400 group-hover:scale-110 transition-transform" />
                             <span className="font-semibold text-white">Nova Prova</span>
                         </button>
-                        <button className="flex flex-col items-center gap-3 p-6 rounded-xl bg-purple-600/10 border border-purple-500/20 hover:bg-purple-600/20 transition-all group text-left w-full">
+                        <button onClick={() => navigate('/students')} className="flex flex-col items-center gap-3 p-6 rounded-xl bg-purple-600/10 border border-purple-500/20 hover:bg-purple-600/20 transition-all group text-left w-full">
                             <GraduationCap className="w-8 h-8 text-purple-400 group-hover:scale-110 transition-transform" />
                             <span className="font-semibold text-white">Importar Alunos</span>
                         </button>
-                        <button className="flex flex-col items-center gap-3 p-6 rounded-xl bg-green-600/10 border border-green-500/20 hover:bg-green-600/20 transition-all group text-left w-full">
+                        <button onClick={() => navigate('/exams')} className="flex flex-col items-center gap-3 p-6 rounded-xl bg-green-600/10 border border-green-500/20 hover:bg-green-600/20 transition-all group text-left w-full">
                             <Upload className="w-8 h-8 text-green-400 group-hover:scale-110 transition-transform" />
                             <span className="font-semibold text-white">Subir Folhas</span>
                         </button>
